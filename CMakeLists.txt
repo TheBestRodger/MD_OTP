@@ -26,9 +26,21 @@ add_executable(OTP ${HEADER} ${SOURCE})
 
 
 # Добавьте параметры компоновки (link) из pkg-config
-link_directories(${KRB5_LIBRARY_DIRS})
-
-message(${KRB5_INCLUDE_DIRS})
-
+link_directories(/lib/x86_64-linux-gnu)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+target_link_libraries(OTP
+libgssapi_krb5.so
+libk5crypto.so
+libkadm5clnt_mit.so
+libkadm5srv_mit.so
+libkrb5.so
+libgssrpc.so   
+libkadm5clnt.so 
+libkadm5srv.so      
+libkdb5.so        
+libkrb5support.so
+libcom_err.a
+)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
