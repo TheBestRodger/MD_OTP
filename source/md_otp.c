@@ -2,26 +2,29 @@
 
 #include "md_otp.h"
 
+krb5_error_code
+kdcpreauth_libOTP_initvt(krb5_context ctx, int maj_ver, int min_ver, 
+                      krb5_plugin_vtable vtable);
 
 static krb5_preauthtype otp_pa_type_list[] =
   { KRB5_PADATA_OTP_REQUEST, 0 };
 
-krb5_error_code 
-print_msg_from_kdc(krb5_context context, int maj_ver)
-{
-    /* General plugin concepts point 1*/
-    if(maj_ver != 1){
-        printf("maj_ver  != 1 s\n");
-        const char * msg = krb5_get_error_message(context, KRB5_PLUGIN_VER_NOTSUPP);
-        printf("%s\n", msg);
-        return KRB5_PLUGIN_VER_NOTSUPP;
-    }
+// krb5_error_code 
+// print_msg_from_kdc(krb5_context context, int maj_ver)
+// {
+//     /* General plugin concepts point 1*/
+//     if(maj_ver != 1){
+//         printf("maj_ver  != 1 s\n");
+//         const char * msg = krb5_get_error_message(context, KRB5_PLUGIN_VER_NOTSUPP);
+//         printf("%s\n", msg);
+//         return KRB5_PLUGIN_VER_NOTSUPP;
+//     }
 
-}
+// }
 
 
 krb5_error_code
-md_preauth_otp_initvt(krb5_context ctx, int maj_ver, int min_ver, 
+kdcpreauth_libOTP_initvt(krb5_context ctx, int maj_ver, int min_ver, 
                       krb5_plugin_vtable vtable)
 {
     /* MUST */
@@ -30,8 +33,8 @@ md_preauth_otp_initvt(krb5_context ctx, int maj_ver, int min_ver,
 
     /* General plugin concepts point 1*/
     if(maj_ver != 1){
-        char * msg = krb5_get_error_message(ctx, KRB5_PLUGIN_VER_NOTSUPP);
-        printf("%s", msg);
+        // char * msg = krb5_get_error_message(ctx, KRB5_PLUGIN_VER_NOTSUPP);
+        // printf("%s", msg);
         return KRB5_PLUGIN_VER_NOTSUPP;
     }
 
