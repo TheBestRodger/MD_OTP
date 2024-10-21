@@ -1,30 +1,6 @@
 /* -*- mode: c; indent-tabs-mode: nil -*- */
 /* include/k5-platform.h */
 /*
- * Copyright 2003, 2004, 2005, 2007, 2008, 2009 Massachusetts Institute of Technology.
- * All Rights Reserved.
- *
- * Export of this software from the United States of America may
- *   require a specific license from the United States Government.
- *   It is the responsibility of any person or organization contemplating
- *   export to obtain such a license before exporting.
- *
- * WITHIN THAT CONSTRAINT, permission to use, copy, modify, and
- * distribute this software and its documentation for any purpose and
- * without fee is hereby granted, provided that the above copyright
- * notice appear in all copies and that both that copyright notice and
- * this permission notice appear in supporting documentation, and that
- * the name of M.I.T. not be used in advertising or publicity pertaining
- * to distribution of the software without specific, written prior
- * permission.  Furthermore if you modify this software you must label
- * your software as modified software and not distribute it in such a
- * fashion that it might be confused with the original M.I.T. software.
- * M.I.T. makes no representations about the suitability of
- * this software for any purpose.  It is provided "as is" without express
- * or implied warranty.
- */
-
-/*
  * Some platform-dependent definitions to sync up the C support level.
  * Some to a C99-ish level, some related utility code.
  *
@@ -233,8 +209,8 @@
 
 /* Run the initialization code during program execution, at the latest
    possible moment.  This means multiple threads may be active.  */
-//# include "k5-thread.h"
-//typedef struct { k5_once_t once; int error, did_run; void (*fn)(void); } k5_init_t;
+# include "k5-thread.h"
+typedef struct { k5_once_t once; int error, did_run; void (*fn)(void); } k5_init_t;
 # ifdef USE_LINKER_INIT_OPTION
 #  define MAYBE_DUMMY_INIT(NAME)                \
         void JOIN__2(NAME, auxinit) () { }

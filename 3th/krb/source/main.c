@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "otp_state.h"
+#include "krb/otp_state.h"
 /*
     krb5_pa_enc_ts *et = NULL;
     krb5_pa_otp_req *req
@@ -19,7 +19,7 @@
 #include <krb5/ccselect_plugin.h>
 
 //#include <krad.h>
-#include <k5-json.h>
+#include <krb/k5-json.h>
 
 static krb5_preauthtype otp_pa_type_list[] =
   { KRB5_PADATA_OTP_REQUEST, 0 };
