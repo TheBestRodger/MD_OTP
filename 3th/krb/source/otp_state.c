@@ -1,7 +1,7 @@
-#include "otp_state.h"
+#include "krb/otp_state.h"
 
 #include <krad.h>
-#include <k5-json.h>
+#include <krb/k5-json.h>
 
 #include <ctype.h>
 
@@ -645,8 +645,6 @@ otp_state_free(otp_state *self)
     if (self == NULL)
         return;
 
-    //krad_attrset_free(self->attrs);
-    //krad_client_free(self->radius);
     token_types_free(self->types);
     free(self);
 }

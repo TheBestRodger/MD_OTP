@@ -7,20 +7,8 @@ kdcpreauth_libOTP_initvt(krb5_context ctx, int maj_ver, int min_ver,
                       krb5_plugin_vtable vtable);
 
 static krb5_preauthtype otp_pa_type_list[] =
-  { KRB5_PADATA_OTP_REQUEST, 0 };
+  { /*KRB5_PADATA_OTP_REQUEST*/KRB5_PADATA_OTP_PIN_CHANGE, 0 };
 
-// krb5_error_code 
-// print_msg_from_kdc(krb5_context context, int maj_ver)
-// {
-//     /* General plugin concepts point 1*/
-//     if(maj_ver != 1){
-//         printf("maj_ver  != 1 s\n");
-//         const char * msg = krb5_get_error_message(context, KRB5_PLUGIN_VER_NOTSUPP);
-//         printf("%s\n", msg);
-//         return KRB5_PLUGIN_VER_NOTSUPP;
-//     }
-
-// }
 
 
 krb5_error_code
@@ -33,8 +21,8 @@ kdcpreauth_libOTP_initvt(krb5_context ctx, int maj_ver, int min_ver,
 
     /* General plugin concepts point 1*/
     if(maj_ver != 1){
-        // char * msg = krb5_get_error_message(ctx, KRB5_PLUGIN_VER_NOTSUPP);
-        // printf("%s", msg);
+        const char * msg = krb5_get_error_message(ctx, KRB5_PLUGIN_VER_NOTSUPP);
+        printf("%s", msg);
         return KRB5_PLUGIN_VER_NOTSUPP;
     }
 
@@ -47,7 +35,7 @@ kdcpreauth_libOTP_initvt(krb5_context ctx, int maj_ver, int min_ver,
     */
     vt = (krb5_kdcpreauth_vtable)vtable;
     // Mandatory
-    vt->name = "md_otp"; // shoud be literal NAME of Module
+    vt->name = "libOTP"; // shoud be literal NAME of Module
     // Mandatory
     vt->pa_type_list = otp_pa_type_list; // RFS 6560 4.2
     /* OPTIONAL */
@@ -105,6 +93,7 @@ kdcpreauth_libOTP_initvt(krb5_context ctx, int maj_ver, int min_ver,
     // Use  to obtain a
     // string describing the error.
 
-    com_err("MD_OTP", 0 , "LOADED");
+    com_err("MD_OTP", 0 , "Loaded MD_OTP");
+
     return 0;
 }
