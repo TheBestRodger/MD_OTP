@@ -8,6 +8,7 @@ make_data(void *data, unsigned int len)
     d.magic = KV5M_DATA;
     d.data = (char *) data;
     d.length = len;
+    com_err("otp_init_err",0," DEBUG: make_data(void *data, unsigned int len)");
     return d;
 }
 krb5_error_code
