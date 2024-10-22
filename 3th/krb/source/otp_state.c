@@ -619,8 +619,8 @@ otp_state_new(krb5_context ctx, otp_state **out)
         goto error;
 
     hndata = make_data(hostname, strlen(hostname));
-    // retval = krad_attrset_add(self->attrs,
-    //                           krad_attr_name2num("NAS-Identifier"), &hndata);
+    retval = krad_attrset_add(self->attrs,
+                               krad_attr_name2num("NAS-Identifier"), &hndata);
     if (retval != 0)
         goto error;
 

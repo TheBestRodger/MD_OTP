@@ -7,20 +7,20 @@
 #include "internal.h"
 #include <string.h>
 
-K5_TAILQ_HEAD(attr_head, attr_st);
+//K5_TAILQ_HEAD(attr_head, attr_st);
 
-typedef struct attr_st attr;
-struct attr_st {
-    K5_TAILQ_ENTRY(attr_st) list;
-    krad_attr type;
-    krb5_data attr;
-    char buffer[MAX_ATTRSIZE];
-};
 
-struct krad_attrset_st {
-    krb5_context ctx;
-    struct attr_head list;
-};
+// typedef struct attr_st attr;
+// struct attr_st {
+//     K5_TAILQ_ENTRY(attr_st) list;
+//     krad_attr type;
+//     krb5_data attr;
+//     char buffer[MAX_ATTRSIZE];
+// };
+// struct krad_attrset_st {
+//     krb5_context ctx;
+//     struct attr_head list;
+// };
 
 krb5_error_code
 md_krad_attrset_new(krb5_context ctx, krad_attrset **set);

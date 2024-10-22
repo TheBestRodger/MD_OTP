@@ -64,14 +64,23 @@ otp_verify(krb5_context context, krb5_data *req_pkt, krb5_kdc_req *request,
 
 
 
-typedef struct _krb5_algorithm_identifier 
-{
-    krb5_data algorithm;        /* OID */
-    krb5_data parameters;       /* Optional */
-} krb5_algorithm_identifier;
 
-typedef struct _krb5_otp_tokeninfo 
-{
+typedef struct token_type_st {
+    char *name;
+    char *server;
+    char *secret;
+    int timeout;
+    size_t retries;
+    krb5_boolean strip_realm;
+    char **indicators;
+} token_type;
+
+/* AlgorithmIdentifier */
+typedef struct _krb5_algorithm_identifier {
+    krb5_data algorithm;      /* OID */
+    krb5_data parameters; /* Optional */
+} krb5_algorithm_identifier;
+typedef struct _krb5_otp_tokeninfo {
     krb5_flags flags;
     krb5_data vendor;
     krb5_data challenge;
@@ -83,16 +92,16 @@ typedef struct _krb5_otp_tokeninfo
     krb5_int32 iteration_count; /* -1 for unspecified */
 } krb5_otp_tokeninfo;
 
-typedef struct token_type_st {
-    char *name;
-    char *server;
-    char *secret;
-    int timeout;
-    size_t retries;
-    krb5_boolean strip_realm;
-    char **indicators;
-} token_type;
+typedef struct _krb5_pa_otp_challenge {
+    krb5_data nonce;
+    krb5_data service;
+    krb5_otp_tokeninfo **tokeninfo;
+    krb5_data salt;
+    krb5_data s2kparams;
+} krb5_pa_otp_challenge;
+
 /*UTILS*/
+
 krb5_data
 make_data(void *data, unsigned int len);
 krb5_error_code
@@ -105,4 +114,14 @@ krb5_error_code
 nonce_generate(krb5_context ctx, unsigned int length, krb5_data *nonce_out);
 // void
 // md_store_32_be (unsigned int val, void *vp);
+
+krb5_error_code
+encode_krb5_pa_otp_challenge(const krb5_pa_otp_challenge *, krb5_data **);
+
+// krb5_error_code
+// encode_krb5_pa_otp_req(const krb5_pa_otp_req *, krb5_data **);
+
+// krb5_error_code
+// encode_krb5_pa_otp_enc_req(const krb5_data *, krb5_data **);
+
 #endif /* OTP_H_ */

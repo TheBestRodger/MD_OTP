@@ -4,22 +4,41 @@
 
 #include <k5-queue.h>
 #include "internal.h"
+
 #include "md_attrset.h"
 
 #include <string.h>
 
+K5_TAILQ_HEAD(attr_head, attr_st);
+
+typedef struct attr_st attr;
+struct attr_st {
+    K5_TAILQ_ENTRY(attr_st) list;
+    krad_attr type;
+    krb5_data attr;
+    char buffer[MAX_ATTRSIZE];
+};
+
+struct krad_attrset_st {
+    krb5_context ctx;
+    struct attr_head list;
+};
 krb5_error_code
 md_krad_attrset_new(krb5_context ctx, krad_attrset **set)
 {
+
     krad_attrset *tmp;
 
     tmp = calloc(1, sizeof(krad_attrset));
+
     if (tmp == NULL)
         return ENOMEM;
+
     tmp->ctx = ctx;
     K5_TAILQ_INIT(&tmp->list);
 
-    *set = tmp;
+    *set = tmp;   
+
     return 0;
 }
 
@@ -44,9 +63,9 @@ md_krad_attrset_free(krad_attrset *set)
 krb5_error_code
 md_krad_attrset_add(krad_attrset *set, krad_attr type, const krb5_data *data)
 {
+    
     krb5_error_code retval;
     attr *tmp;
-
     retval = kr_attr_valid(type, data);
     if (retval != 0)
         return retval;
@@ -57,9 +76,11 @@ md_krad_attrset_add(krad_attrset *set, krad_attr type, const krb5_data *data)
 
     tmp->type = type;
     tmp->attr = make_data(tmp->buffer, data->length);
+
     memcpy(tmp->attr.data, data->data, data->length);
 
     K5_TAILQ_INSERT_TAIL(&set->list, tmp, list);
+
     return 0;
 }
 
@@ -70,7 +91,7 @@ md_krad_attrset_add_number(krad_attrset *set, krad_attr type, krb5_ui_4 num)
 
     num = htonl(num);
     data = make_data(&num, sizeof(num));
-    return krad_attrset_add(set, type, &data);
+    return md_krad_attrset_add(set, type, &data);
 }
 
 void
@@ -108,14 +129,14 @@ md_krad_attrset_copy(const krad_attrset *set, krad_attrset **copy)
     krad_attrset *tmp;
     attr *a;
 
-    retval = krad_attrset_new(set->ctx, &tmp);
+    retval = md_krad_attrset_new(set->ctx, &tmp);
     if (retval != 0)
         return retval;
 
     K5_TAILQ_FOREACH(a, &set->list, list) {
-        retval = krad_attrset_add(tmp, a->type, &a->attr);
+        retval = md_krad_attrset_add(tmp, a->type, &a->attr);
         if (retval != 0) {
-            krad_attrset_free(tmp);
+            md_krad_attrset_free(tmp);
             return retval;
         }
     }
@@ -171,7 +192,7 @@ md_kr_attrset_decode(krb5_context ctx, const krb5_data *in, const char *secret,
 
     *set_out = NULL;
 
-    retval = krad_attrset_new(ctx, &set);
+    retval = md_krad_attrset_new(ctx, &set);
     if (retval != 0)
         return retval;
 
@@ -189,7 +210,7 @@ md_kr_attrset_decode(krb5_context ctx, const krb5_data *in, const char *secret,
             goto cleanup;
 
         tmp = make_data(buffer, len);
-        retval = krad_attrset_add(set, type, &tmp);
+        retval = md_krad_attrset_add(set, type, &tmp);
         if (retval != 0)
             goto cleanup;
     }
@@ -199,6 +220,6 @@ md_kr_attrset_decode(krb5_context ctx, const krb5_data *in, const char *secret,
 
 cleanup:
     zap(buffer, sizeof(buffer));
-    krad_attrset_free(set);
+    md_krad_attrset_free(set);
     return retval;
 }
