@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <mit-krb5/profile.h>
-
+#include "kdb.h"
 typedef struct otp_state_st 
 {
     krb5_context ctx;
@@ -108,14 +108,106 @@ int
 otp_flags(krb5_context context, krb5_preauthtype pa_type)
 {
     printf("Inizialization of flags \n");
-    com_err("otp_flags",0,"Loaded FLAGS %d", PA_REQUIRED);//PA_REPLACES_KEY
-    return PA_REQUIRED;
+    com_err("otp_flags",0,"Loaded FLAGS %d", PA_SUFFICIENT);//PA_REPLACES_KEY PA_SUFFICIENT
+    return PA_SUFFICIENT;
 }
 static inline krb5_data
 empty_data()
 {
     return make_data(NULL, 0);
 }
+krb5_error_code
+krb5_dbe_lookup_tl_data(krb5_context context, krb5_db_entry *entry,
+                        krb5_tl_data *ret_tl_data)
+{
+    krb5_tl_data *tl_data;
+
+    for (tl_data = entry->tl_data; tl_data; tl_data = tl_data->tl_data_next) {
+        if (tl_data->tl_data_type == ret_tl_data->tl_data_type) {
+            *ret_tl_data = *tl_data;
+            return (0);
+        }
+    }
+
+    /*
+     * If the requested record isn't found, return zero bytes.  If it
+     * ever means something to have a zero-length tl_data, this code
+     * and its callers will have to be changed.
+     */
+
+    ret_tl_data->tl_data_length = 0;
+    ret_tl_data->tl_data_contents = NULL;
+    return (0);
+}
+/*
+ * Prepare to iterate over the string attributes of entry.  The returned
+ * pointers are aliases into entry's tl_data (or into an empty string literal)
+ * and remain valid until the entry's tl_data is changed.
+ */
+static krb5_error_code
+begin_attrs(krb5_context context, krb5_db_entry *entry, const char **pos_out,
+            const char **end_out)
+{
+    krb5_error_code code;
+    krb5_tl_data tl_data;
+
+    *pos_out = *end_out = NULL;
+    tl_data.tl_data_type = KRB5_TL_STRING_ATTRS;
+    code = krb5_dbe_lookup_tl_data(context, entry, &tl_data);
+    if (code)
+        return code;
+
+    /* Copy the current mapping to buf, updating key with value if found. */
+    *pos_out = (const char *)tl_data.tl_data_contents;
+    *end_out = *pos_out + tl_data.tl_data_length;
+    return 0;
+}
+
+/* Find the next key and value pair in *pos and update *pos. */
+static krb5_boolean
+next_attr(const char **pos, const char *end, const char **key_out,
+          const char **val_out)
+{
+    const char *key, *key_end, *val, *val_end;
+
+    *key_out = *val_out = NULL;
+    if (*pos == end)
+        return FALSE;
+    key = *pos;
+    key_end = memchr(key, '\0', end - key);
+    if (key_end == NULL)        /* Malformed representation; give up. */
+        return FALSE;
+    val = key_end + 1;
+    val_end = memchr(val, '\0', end - val);
+    if (val_end == NULL)        /* Malformed representation; give up. */
+        return FALSE;
+
+    *key_out = key;
+    *val_out = val;
+    *pos = val_end + 1;
+    return TRUE;
+}
+krb5_error_code
+krb5_dbe_get_string(krb5_context context, krb5_db_entry *entry,
+                    const char *key, char **value_out)
+{
+    krb5_error_code code;
+    const char *pos, *end, *mapkey, *mapval;
+
+    *value_out = NULL;
+    code = begin_attrs(context, entry, &pos, &end);
+    if (code)
+        return code;
+    while (next_attr(&pos, end, &mapkey, &mapval)) {
+        if (strcmp(mapkey, key) == 0) {
+            *value_out = strdup(mapval);
+            return (*value_out == NULL) ? ENOMEM : 0;
+        }
+    }
+
+    return 0;
+}
+
 void
 otp_edata(krb5_context context, krb5_kdc_req *request,
           krb5_kdcpreauth_callbacks cb, krb5_kdcpreauth_rock rock,
@@ -145,16 +237,25 @@ otp_edata(krb5_context context, krb5_kdc_req *request,
         com_err("otp_edata",0,"retval == 0");
         goto out;
     }
-    cb->free_string(context, rock, config);
+    //cb->free_string(context, rock, config);
 
     // Get a pointer to the FAST armor key, or NULL if the request did not use
     // FAST. The returned pointer is an alias and should not be freed.
+    /*
+        static krb5_keyblock *
+    fast_armor(krb5_context context, krb5_kdcpreauth_rock rock)
+    {
+        return rock->rstate->armor_key;
+    }
+    */
     armor_key = cb->fast_armor(context, rock);
+
     if (armor_key == NULL) {
         retval = ENOENT;
         com_err("otp_edata",0,"armor_key == NULL");
         goto out;
-    }
+    }    
+    cb->free_string(context, rock, config);
     /* Build the (mostly empty) challenge. */
     com_err("otp_edata",0,"Loading: Build the (mostly empty) challenge");
     memset(&ti, 0, sizeof(ti));
