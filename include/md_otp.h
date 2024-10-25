@@ -2,17 +2,46 @@
 #define OTP_H_
 
 #include <krb5.h>
-
+#include <krad.h>
+#include "internal.h"
 #include <krb5/clpreauth_plugin.h>
 #include <krb5/kdcpreauth_plugin.h>
-
+#include <mit-krb5/profile.h>
 
 #define	ENOENT              2	/* No such file or directory */
 #define	ENOMEM              12	/* Out of memory */
 #define HOST_NAME_MAX		64/* Maximum host name length. */
+#define DEFAULT_TYPE_NAME "DEFAULT"
+#define DEFAULT_SOCKET_FMT KDC_RUN_DIR "/%s.socket"
+#define DEFAULT_TIMEOUT 5
+#define DEFAULT_RETRIES 3
+#define MAX_SECRET_LEN 1024
+#define KDC_DIR                 "/usr/local/var/krb5kdc"
+#define KDC_RUN_DIR             "/usr/local/var/run/krb5kdc"
+/* RFC 2865 */
+#define OFFSET_CODE 0
+#define OFFSET_ID 1
+#define OFFSET_LENGTH 2
+#define OFFSET_AUTH 4
+#define OFFSET_ATTR 20
+#define AUTH_FIELD_SIZE (OFFSET_ATTR - OFFSET_AUTH)
 
 
+#define offset(d, o) (&(d)->data[o])
+#define pkt_code_get(p) (*(krad_code *)offset(&(p)->pkt, OFFSET_CODE))
+#define pkt_code_set(p, v) (*(krad_code *)offset(&(p)->pkt, OFFSET_CODE)) = v
+#define pkt_id_get(p) (*(uchar *)offset(&(p)->pkt, OFFSET_ID))
+#define pkt_id_set(p, v) (*(uchar *)offset(&(p)->pkt, OFFSET_ID)) = v
+#define pkt_len_get(p)  load_16_be(offset(&(p)->pkt, OFFSET_LENGTH))
+#define pkt_len_set(p, v)  store_16_be(v, offset(&(p)->pkt, OFFSET_LENGTH))
+#define pkt_auth(p) ((uchar *)offset(&(p)->pkt, OFFSET_AUTH))
+#define pkt_attr(p) ((unsigned char *)offset(&(p)->pkt, OFFSET_ATTR))
 
+struct krad_packet_st {
+    char buffer[KRAD_PACKET_SIZE_MAX];
+    krad_attrset *attrset;
+    krb5_data pkt;
+};
 /* 
             General plugin concepts point 2
 
@@ -75,6 +104,14 @@ typedef struct token_type_st {
     char **indicators;
 } token_type;
 
+typedef struct otp_state_st 
+{
+    krb5_context ctx;
+    krad_client *MF;
+    token_type *types;
+    krad_attrset *attrs;
+} otp_state;
+
 /* AlgorithmIdentifier */
 typedef struct _krb5_algorithm_identifier {
     krb5_data algorithm;      /* OID */
@@ -99,11 +136,11 @@ typedef struct _krb5_pa_otp_challenge {
     krb5_data salt;
     krb5_data s2kparams;
 } krb5_pa_otp_challenge;
-
 /*UTILS*/
 
 krb5_data
 make_data(void *data, unsigned int len);
+
 krb5_error_code
 alloc_data(krb5_data *data, unsigned int len);
 void *
@@ -117,6 +154,9 @@ nonce_generate(krb5_context ctx, unsigned int length, krb5_data *nonce_out);
 
 krb5_error_code
 encode_krb5_pa_otp_challenge(const krb5_pa_otp_challenge *, krb5_data **);
+
+krb5_error_code
+token_types_decode(profile_t profile, token_type **out);
 
 // krb5_error_code
 // encode_krb5_pa_otp_req(const krb5_pa_otp_req *, krb5_data **);
