@@ -4,14 +4,6 @@
 #include <string.h>
 #include <mit-krb5/profile.h>
 #include "kdb.h"
-typedef struct otp_state_st 
-{
-    krb5_context ctx;
-    krad_client *MF;
-    token_type *types;
-    krad_attrset *attrs;
-} otp_state;
-
 
 void print_realms(const char **realmnames)
 {
@@ -23,6 +15,7 @@ void print_realms(const char **realmnames)
         ++i;
     }
 }
+
 void otp_state_free(otp_state *self);
 krb5_error_code
 otp_init(krb5_context context, krb5_kdcpreauth_moddata *moddata_out,
@@ -53,10 +46,10 @@ otp_init(krb5_context context, krb5_kdcpreauth_moddata *moddata_out,
     if (retval != 0)
         goto error;
 
-    //retval = token_types_decode(profile, &state->types);
+    retval = token_types_decode(profile, &state->types);
     profile_abandon(profile);
-    com_err("otp_init_err",0,"Loading profile");
-
+    if (retval != 0)
+        goto error;
 
 
     com_err("otp_init_err",0,"Loading krad_attrset_new");

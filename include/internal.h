@@ -10,6 +10,7 @@
 #include "k5-platform.h"
 #include "k5-queue.h"
 #include "md_otp.h"
+#include "md_attrset.h"
 #include <errno.h>
 
 #include <sys/types.h>
@@ -79,9 +80,9 @@ kr_attrset_decode(krb5_context ctx, const krb5_data *in, const char *secret,
 
 /* Create a new remote object which manages a socket and the state of
  * outstanding requests. */
-// krb5_error_code
-// kr_remote_new(krb5_context kctx, verto_ctx *vctx, const struct addrinfo *info,
-//               const char *secret, krad_remote **rr);
+krb5_error_code
+kr_remote_new(krb5_context kctx, verto_ctx *vctx, const struct addrinfo *info,
+              const char *secret, krad_remote **rr);
 
 /* Free a remote object. */
 void
@@ -114,11 +115,11 @@ kr_remote_cancel(krad_remote *rr, const krad_packet *pkt);
 void
 kr_remote_cancel_all(krad_remote *rr);
 
-// /* Determine if this remote object refers to the remote resource identified
-//  * by the addrinfo struct and the secret. */
-// krb5_boolean
-// kr_remote_equals(const krad_remote *rr, const struct addrinfo *info,
-//                  const char *secret);
+/* Determine if this remote object refers to the remote resource identified
+ * by the addrinfo struct and the secret. */
+krb5_boolean
+kr_remote_equals(const krad_remote *rr, const struct addrinfo *info,
+                 const char *secret);
 
 /* Adapted from lib/krb5/os/sendto_kdc.c. */
 static inline krb5_error_code
