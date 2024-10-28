@@ -1,5 +1,6 @@
 #include "md_otp.h"
 #include "k5-platform.h"
+
 krb5_data
 make_data(void *data, unsigned int len)
 {
@@ -11,6 +12,12 @@ make_data(void *data, unsigned int len)
     com_err("otp_init_err",0," DEBUG: make_data(void *data, unsigned int len)");
     return d;
 }
+krb5_data
+empty_data()
+{
+    return make_data(NULL, 0);
+}
+
 krb5_error_code
 alloc_data(krb5_data *data, unsigned int len)
 {
