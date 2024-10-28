@@ -569,15 +569,6 @@ request_free(request *req)
     free(req);
 }
 
-krad_code
-krad_packet_get_code(const krad_packet *pkt)
-{
-    if (pkt == NULL)
-        return 0;
-
-    return pkt_code_get(pkt);
-}
-
 void
 callback(krb5_error_code retval, const krad_packet *rqst,
          const krad_packet *resp, void *data)

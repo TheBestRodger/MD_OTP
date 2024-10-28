@@ -1,31 +1,5 @@
 /* -*- mode: c; c-basic-offset: 4; indent-tabs-mode: nil -*- */
 /* lib/krad/packet.c - Packet functions for libkrad */
-/*
- * Copyright 2013 Red Hat, Inc.  All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- *    1. Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *
- *    2. Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
- * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
- * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
 
 #include "internal.h"
 
@@ -35,12 +9,29 @@
 
 typedef unsigned char uchar;
 
+// /* RFC 2865 */
+// #define OFFSET_CODE 0
+// #define OFFSET_ID 1
+// #define OFFSET_LENGTH 2
+// #define OFFSET_AUTH 4
+// #define OFFSET_ATTR 20
+// #define AUTH_FIELD_SIZE (OFFSET_ATTR - OFFSET_AUTH)
 
-struct krad_packet_st {
-    char buffer[KRAD_PACKET_SIZE_MAX];
-    krad_attrset *attrset;
-    krb5_data pkt;
-};
+// #define offset(d, o) (&(d)->data[o])
+// #define pkt_code_get(p) (*(krad_code *)offset(&(p)->pkt, OFFSET_CODE))
+// #define pkt_code_set(p, v) (*(krad_code *)offset(&(p)->pkt, OFFSET_CODE)) = v
+// #define pkt_id_get(p) (*(uchar *)offset(&(p)->pkt, OFFSET_ID))
+// #define pkt_id_set(p, v) (*(uchar *)offset(&(p)->pkt, OFFSET_ID)) = v
+// #define pkt_len_get(p)  load_16_be(offset(&(p)->pkt, OFFSET_LENGTH))
+// #define pkt_len_set(p, v)  store_16_be(v, offset(&(p)->pkt, OFFSET_LENGTH))
+// #define pkt_auth(p) ((uchar *)offset(&(p)->pkt, OFFSET_AUTH))
+// #define pkt_attr(p) ((unsigned char *)offset(&(p)->pkt, OFFSET_ATTR))
+
+// struct krad_packet_st {
+//     char buffer[KRAD_PACKET_SIZE_MAX];
+//     krad_attrset *attrset;
+//     krb5_data pkt;
+// };
 
 typedef struct {
     uchar x[(UCHAR_MAX + 1) / 8];
@@ -202,7 +193,7 @@ packet_set_attrset(krb5_context ctx, const char *secret, krad_packet *pkt)
     krb5_data tmp;
 
     tmp = make_data(pkt_attr(pkt), pkt->pkt.length - OFFSET_ATTR);
-    return kr_attrset_decode(ctx, &tmp, secret, pkt_auth(pkt), &pkt->attrset);
+    return md_kr_attrset_decode(ctx, &tmp, secret, pkt_auth(pkt), &pkt->attrset);
 }
 
 ssize_t
@@ -224,7 +215,7 @@ void
 krad_packet_free(krad_packet *pkt)
 {
     if (pkt)
-        krad_attrset_free(pkt->attrset);
+        md_krad_attrset_free(pkt->attrset);
     free(pkt);
 }
 
@@ -258,7 +249,7 @@ krad_packet_new_request(krb5_context ctx, const char *secret, krad_code code,
         goto error;
 
     /* Encode the attributes. */
-    retval = kr_attrset_encode(set, secret, pkt_auth(pkt), pkt_attr(pkt),
+    retval = md_kr_attrset_encode(set, secret, pkt_auth(pkt), pkt_attr(pkt),
                                &attrset_len);
     if (retval != 0)
         goto error;
@@ -296,7 +287,7 @@ krad_packet_new_response(krb5_context ctx, const char *secret, krad_code code,
         return ENOMEM;
 
     /* Encode the attributes. */
-    retval = kr_attrset_encode(set, secret, pkt_auth(request), pkt_attr(pkt),
+    retval = md_kr_attrset_encode(set, secret, pkt_auth(request), pkt_attr(pkt),
                                &attrset_len);
     if (retval != 0)
         goto error;
@@ -449,5 +440,5 @@ krad_packet_get_code(const krad_packet *pkt)
 const krb5_data *
 krad_packet_get_attr(const krad_packet *pkt, krad_attr type, size_t indx)
 {
-    return krad_attrset_get(pkt->attrset, type, indx);
+    return md_krad_attrset_get(pkt->attrset, type, indx);
 }

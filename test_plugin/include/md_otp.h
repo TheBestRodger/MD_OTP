@@ -94,6 +94,6 @@ void *
 k5alloc(size_t size, krb5_error_code *code);
 krb5_error_code
 nonce_generate(krb5_context ctx, unsigned int length, krb5_data *nonce_out);
-void
-store_32_be (unsigned int val, void *vp);
+// void
+// store_32_be (unsigned int val, void *vp);
 #endif /* OTP_H_ */
