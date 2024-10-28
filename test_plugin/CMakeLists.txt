@@ -7,6 +7,7 @@ set(CMAKE_C_STANDARD 99)
 include_directories(${KRB5})
 
 include_directories(/home/md_otp/test_plugin/include)
+include_directories(/home/md_otp/include)
 add_executable(OTP source/md_otp.c)
 
 target_link_libraries(OTP
