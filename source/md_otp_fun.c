@@ -718,8 +718,9 @@ otp_state_new(krb5_context ctx, otp_state **out)
 
     self->ctx = ctx;
     *out = self;
+
+    com_err("libOTP",0,"Loaded otp_state_new successful");    
     return 0;
-    com_err("libOTP",0,"Loaded otp_state_new successful");
 error:
     otp_state_free(self);
     com_err("libOTP",0,"Loaded otp_state_new error");

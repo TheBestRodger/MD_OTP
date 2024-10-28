@@ -220,11 +220,11 @@ otp_edata(krb5_context context, krb5_kdc_req *request,
 
     /* Determine if otp is enabled for the user. */
     retval = cb->get_string(context, rock, "libOTP", &config);
-    // if (retval == 0 && config == NULL)
-    // {
-    //     com_err("libOTP",0,"retval == 0 && config == NULL");
-    //     retval = ENOENT;
-    // }
+    if (retval == 0 && config == NULL)
+    {
+        com_err("libOTP",0,"retval == 0 && config == NULL");
+        retval = ENOENT;
+    }
     if (retval != 0)
         goto out;
     cb->free_string(context, rock, config);
@@ -234,7 +234,8 @@ otp_edata(krb5_context context, krb5_kdc_req *request,
     armor_key = cb->fast_armor(context, rock);
     if (armor_key == NULL) {
         retval = ENOENT;
-        goto out;
+        com_err("libOTP",0,"armor_key == NULL");
+        //goto out;
     }
 
     /* Build the (mostly empty) challenge. */
@@ -248,15 +249,19 @@ otp_edata(krb5_context context, krb5_kdc_req *request,
     /* Generate the nonce. */
     retval = nonce_generate(context, armor_key->length, &nonce);
     if (retval != 0)
+    {    
+        com_err("libOTP",0,"retval != 0");
         goto out;
+    }
     chl.nonce = nonce;
 
     /* Build the output pa-data. */
-    retval = encode_krb5_pa_otp_challenge(&chl, &encoding);
+    //retval = encode_krb5_pa_otp_challenge(&chl, &encoding);
     if (retval != 0)
         goto out;
     pa = k5alloc(sizeof(krb5_pa_data), &retval);
     if (pa == NULL) {
+        com_err("libOTP",0,"pa == NULL");
         krb5_free_data(context, encoding);
         goto out;
     }
@@ -264,10 +269,17 @@ otp_edata(krb5_context context, krb5_kdc_req *request,
     pa->contents = (krb5_octet *)encoding->data;
     pa->length = encoding->length;
     free(encoding);
-
-out:
-    krb5_free_data_contents(context, &nonce);
     (*respond)(arg, retval, pa);
+
+    /*
+    Ответчик для krb5_kdcpreauth_data_fn.  
+    При вызове с ненулевым кодом pa будет проигнорирован, и тип данных pa не будет включен в список подсказок.
+    При вызове с нулевым кодом и нулевым значением pa тип padata будет
+    включен в список с пустым значением.  При вызове с нулевым кодом и ненулевым значением pa, pa будет включен в список подсказок и позже будет освобожден KDC.*/
+    
+    out:
+        krb5_free_data_contents(context, &nonce);
+        (*respond)(arg, retval, pa);
 }
 
 void
