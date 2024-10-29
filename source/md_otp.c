@@ -176,120 +176,168 @@ krb5_error_code
 otp_init(krb5_context context, krb5_kdcpreauth_moddata *moddata_out,
          const char **realmnames)
 {
-    com_err("libOTP",0,"Loading otp_init");
-    krb5_error_code retval;
-    otp_state *state;
+    com_err("otp",0,"Loading otp_init");
+    // krb5_error_code retval;
+    // otp_state *state;
     print_realms(realmnames);
-    retval = otp_state_new(context, &state);
-    if (retval)
-        return retval;
-    *moddata_out = (krb5_kdcpreauth_moddata)state;
-
-    com_err("libOTP",0,"otp_init Loaded");
+    // retval = otp_state_new(context, &state);
+    // if (retval)
+    //     return retval;
+    *moddata_out = NULL;//(krb5_kdcpreauth_moddata)state;
+    //*module_context = NULL;  // Инициализируйте контекст модуля при необходимости
+    com_err("otp",0,"otp_init Loaded");
     return 0;
 }
 
 void
 otp_fini(krb5_context context, krb5_kdcpreauth_moddata moddata)
 {
-    com_err("libOTP",0,"Loading otp_fini");
+    com_err("otp",0,"Loading otp_fini");
     otp_state_free((otp_state *)moddata);
 }
 
 int
 otp_flags(krb5_context context, krb5_preauthtype pa_type)
 {
-    com_err("libOTP",0,"Loading otp_flags");
-    return PA_REQUIRED;//PA_REQUIRED  PA_SUFFICIENT PA_REPLACES_KEY
+    com_err("otp",0,"otp_flags PA_REPLACES_KEY");
+    return PA_REPLACES_KEY;//PA_REQUIRED  PA_SUFFICIENT PA_REPLACES_KEY
 }
 
-void
-otp_edata(krb5_context context, krb5_kdc_req *request,
-          krb5_kdcpreauth_callbacks cb, krb5_kdcpreauth_rock rock,
-          krb5_kdcpreauth_moddata moddata, krb5_preauthtype pa_type,
-          krb5_kdcpreauth_edata_respond_fn respond, void *arg)
+//krb5_error_code 
+// otp_edata(krb5_context context, krb5_kdc_req *request,
+//           krb5_kdcpreauth_callbacks cb, krb5_kdcpreauth_rock rock,
+//           krb5_kdcpreauth_moddata moddata, krb5_preauthtype pa_type,
+//           krb5_kdcpreauth_edata_respond_fn respond, void *arg)
+void otp_edata(krb5_context context,
+                              krb5_kdc_req *request,
+                              krb5_kdcpreauth_callbacks cb,
+                              krb5_kdcpreauth_rock rock,
+                              krb5_kdcpreauth_moddata moddata,
+                              krb5_preauthtype pa_type,
+                              krb5_kdcpreauth_edata_respond_fn respond,
+                              void *arg)
 {
-    com_err("libOTP",0,"Loading otp_edata");
-    krb5_otp_tokeninfo ti, *tis[2] = { &ti, NULL };
-    krb5_keyblock *armor_key = NULL;
-    krb5_pa_otp_challenge chl;
-    krb5_pa_data *pa = NULL;
-    krb5_error_code retval;
-    krb5_data *encoding, nonce = empty_data();
-    char *config;
+    com_err("otp",0,"Loading otp_edata");
+    krb5_pa_data *edata;
+    edata = (krb5_pa_data *)malloc(sizeof(krb5_pa_data));
+    edata->magic = 0;
+    edata->pa_type = KRB5_PADATA_OTP_CHALLENGE;
+    edata->length = 0;
+    edata->contents = NULL;
 
-    /* Determine if otp is enabled for the user. */
-    retval = cb->get_string(context, rock, "libOTP", &config);
-    if (retval == 0 && config == NULL)
-    {
-        com_err("libOTP",0,"retval == 0 && config == NULL");
-        retval = ENOENT;
-    }
-    if (retval != 0)
-        goto out;
-    cb->free_string(context, rock, config);
+    // Respond with e-data to client
+    (*respond)(arg, 0, edata);
+    com_err("otp",0,"Loading_2 otp_edata");
 
-    /* Get the armor key.  This indicates the length of random data to use in
-     * the nonce. */
-    armor_key = cb->fast_armor(context, rock);
-    if (armor_key == NULL) {
-        retval = ENOENT;
-        com_err("libOTP",0,"armor_key == NULL");
-        //goto out;
-    }
+    // krb5_pa_data *pa_data;
 
-    /* Build the (mostly empty) challenge. */
-    memset(&ti, 0, sizeof(ti));
-    memset(&chl, 0, sizeof(chl));
-    chl.tokeninfo = tis;
-    ti.format = -1;
-    ti.length = -1;
-    ti.iteration_count = -1;
+    // // Генерируем preauthentication data
+    // pa_data = (krb5_pa_data *) malloc(sizeof(krb5_pa_data *) * 2); // пример с одним элементом
+    // pa_data = (krb5_pa_data *) malloc(sizeof(krb5_pa_data));
+    // pa_data->pa_type = pa_type;
+    // pa_data->contents = (krb5_octet *) strdup("example contents");
+    // pa_data->length = strlen((char *)pa_data->contents);
 
-    /* Generate the nonce. */
-    retval = nonce_generate(context, armor_key->length, &nonce);
-    if (retval != 0)
-    {    
-        com_err("libOTP",0,"retval != 0");
-        goto out;
-    }
-    chl.nonce = nonce;
+    // //pa_data = NULL; // Конечный элемент массива
 
-    /* Build the output pa-data. */
-    //retval = encode_krb5_pa_otp_challenge(&chl, &encoding);
-    if (retval != 0)
-        goto out;
-    pa = k5alloc(sizeof(krb5_pa_data), &retval);
-    if (pa == NULL) {
-        com_err("libOTP",0,"pa == NULL");
-        krb5_free_data(context, encoding);
-        goto out;
-    }
-    pa->pa_type = KRB5_PADATA_OTP_CHALLENGE;
-    pa->contents = (krb5_octet *)encoding->data;
-    pa->length = encoding->length;
-    free(encoding);
-    (*respond)(arg, retval, pa);
+    // // Передаем полученные данные дальше
+    // respond(arg, 0, pa_data);
+    // return 0;
+    // krb5_otp_tokeninfo ti, *tis[2] = { &ti, NULL };
+    // krb5_keyblock *armor_key = NULL;
+    // krb5_pa_otp_challenge chl;
+    // krb5_pa_data *pa = NULL;
+    // krb5_error_code retval;
+    // krb5_data *encoding, nonce = empty_data();
+    // char *config;
 
-    /*
-    Ответчик для krb5_kdcpreauth_data_fn.  
-    При вызове с ненулевым кодом pa будет проигнорирован, и тип данных pa не будет включен в список подсказок.
-    При вызове с нулевым кодом и нулевым значением pa тип padata будет
-    включен в список с пустым значением.  При вызове с нулевым кодом и ненулевым значением pa, pa будет включен в список подсказок и позже будет освобожден KDC.*/
+    // /* Determine if otp is enabled for the user. */
+    // retval = cb->get_string(context, rock, "otp", &config);
+    // if (retval == 0 && config == NULL)
+    // {
+    //     com_err("otp",0,"retval == 0 && config == NULL");
+    //     retval = ENOENT;
+    // }
+    // if (retval != 0)
+    //     goto out;
+    // cb->free_string(context, rock, config);
+
+    // /* Get the armor key.  This indicates the length of random data to use in
+    //  * the nonce. */
+    // armor_key = cb->fast_armor(context, rock);
+    // if (armor_key == NULL) {
+    //     retval = ENOENT;
+    //     com_err("otp",0,"armor_key == NULL");
+    //     //goto out;
+    // }
+
+    // /* Build the (mostly empty) challenge. */
+    // memset(&ti, 0, sizeof(ti));
+    // memset(&chl, 0, sizeof(chl));
+    // chl.tokeninfo = tis;
+    // ti.format = -1;
+    // ti.length = -1;
+    // ti.iteration_count = -1;
+
+    // /* Generate the nonce. */
+    // retval = nonce_generate(context, armor_key->length, &nonce);
+    // if (retval != 0)
+    // {    
+    //     com_err("otp",0,"retval != 0");
+    //     goto out;
+    // }
+    // chl.nonce = nonce;
+
+    // /* Build the output pa-data. */
+    // //retval = encode_krb5_pa_otp_challenge(&chl, &encoding);
+    // if (retval != 0)
+    //     goto out;
+    // pa = k5alloc(sizeof(krb5_pa_data), &retval);
+    // if (pa == NULL) {
+    //     com_err("otp",0,"pa == NULL");
+    //     krb5_free_data(context, encoding);
+    //     goto out;
+    // }
+    // pa->pa_type = KRB5_PADATA_OTP_CHALLENGE;
+    // pa->contents = (krb5_octet *)encoding->data;
+    // pa->length = encoding->length;
+    // free(encoding);
+    // (*respond)(arg, retval, pa);
+
+    // /*
+    // Ответчик для krb5_kdcpreauth_data_fn.  
+    // При вызове с ненулевым кодом pa будет проигнорирован, и тип данных pa не будет включен в список подсказок.
+    // При вызове с нулевым кодом и нулевым значением pa тип padata будет
+    // включен в список с пустым значением.  При вызове с нулевым кодом и ненулевым значением pa, pa будет включен в список подсказок и позже будет освобожден KDC.*/
     
-    out:
-        krb5_free_data_contents(context, &nonce);
-        (*respond)(arg, retval, pa);
+    // out:
+    //     krb5_free_data_contents(context, &nonce);
+    //     (*respond)(arg, retval, pa);
 }
 
-void
+void 
 otp_verify(krb5_context context, krb5_data *req_pkt, krb5_kdc_req *request,
-           krb5_enc_tkt_part *enc_tkt_reply, krb5_pa_data *pa,
+           krb5_enc_tkt_part *enc_tkt_reply, krb5_pa_data *data,
            krb5_kdcpreauth_callbacks cb, krb5_kdcpreauth_rock rock,
            krb5_kdcpreauth_moddata moddata,
            krb5_kdcpreauth_verify_respond_fn respond, void *arg)
 {
-    com_err("libOTP",0,"Loading otp_verify");
+    fprintf(stderr, "Entering example_verify_padata\n");
+    com_err("otp",0,"Loading otp_verify");
+    if (data->pa_type != 12345) 
+    {
+        com_err("otp",0,"Loading otp_verify");
+    }
+
+    // Проверка корректности данных (например, по сравнению с "example_challenge").
+    if (strncmp((const char *)data->contents, "example_response", data->length) == 0) 
+    {
+        com_err("otp",0,"Loading otp_verify");
+    } 
+    else 
+    {
+        com_err("otp",0,"Loading otp_verify");
+    }
 //     krb5_keyblock *armor_key = NULL;
 //     krb5_pa_otp_req *req = NULL;
 //     struct request_state *rs;

@@ -396,7 +396,7 @@ static krb5_error_code
 token_types_decode(profile_t profile, token_type **out)
 {
     com_err("libOTP", 0, "Loading token_types_decode");   
-    const char *hier[2] = { "libOTP", NULL };
+    const char *hier[2] = { "MyRemoteTokenType", NULL };
     token_type *types = NULL;
     char **names = NULL;
     krb5_error_code retval;
@@ -404,7 +404,7 @@ token_types_decode(profile_t profile, token_type **out)
     krb5_boolean have_default = FALSE;
 
     retval = profile_get_subsection_names(profile, hier, &names);
-        com_err("libOTP", 0, "Loading subsection_names"); 
+    com_err("libOTP", 0, "Loading subsection_names"); 
     int iii = 0;
     // Последний элемент массива - NULL, чтобы обозначить конец
     while (names[iii] != NULL)
@@ -415,7 +415,7 @@ token_types_decode(profile_t profile, token_type **out)
 
     if (retval != 0)
         return retval;
-
+    printf("%s", hier[0]);
     /* Check if any of the profile subsections overrides the default. */
     for (i = 0; names[i] != NULL; i++) {
         if (strcmp(names[i], DEFAULT_TYPE_NAME) == 0)
@@ -678,7 +678,7 @@ otp_state_new(krb5_context ctx, otp_state **out)
     com_err("libOTP",0,"Loading otp_state_new");
     char hostname[HOST_NAME_MAX + 1];
     krb5_error_code retval;
-    profile_t profile;
+    profile_t profile = NULL;
     krb5_data hndata;
     otp_state *self;
 
@@ -692,6 +692,8 @@ otp_state_new(krb5_context ctx, otp_state **out)
     com_err("libOTP",0,"Loading krb5_get_profile");
     retval = krb5_get_profile(ctx, &profile);
     //printf("%d\n",profile->magic);
+    if(profile == NULL)
+        printf("profile == nulll\n");
     if (retval != 0)
         goto error;
     com_err("libOTP",0,"Loading token_types_decode");

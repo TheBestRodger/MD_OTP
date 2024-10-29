@@ -11,7 +11,7 @@ include_directories(/home/md_otp/include)
 add_executable(OTP source/md_otp.c)
 
 target_link_libraries(OTP
-/home/md_otp/test_plugin/lib/libOTP.so
+/home/md_otp/test_plugin/lib/libotp.so
 /lib/x86_64-linux-gnu/mit-krb5/libkrb5.so
 /lib/x86_64-linux-gnu/libcom_err.so
 /home/md_otp/test_plugin/lib/libkrad.so

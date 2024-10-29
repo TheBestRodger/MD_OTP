@@ -84,15 +84,30 @@ otp_flags(krb5_context context, krb5_preauthtype pa_type);
         Этой функции не разрешено создавать объект modreq, поскольку у нас нет гарантии, что клиент когда-либо отправит повторный запрос или что он попадет в этот KDC, если это произойдет.
 */
 void
-otp_edata(krb5_context context, krb5_kdc_req *request,
-          krb5_kdcpreauth_callbacks cb, krb5_kdcpreauth_rock rock,
-          krb5_kdcpreauth_moddata moddata, krb5_preauthtype pa_type,
-          krb5_kdcpreauth_edata_respond_fn respond, void *arg);
+otp_edata(krb5_context context,
+                              krb5_kdc_req *request,
+                              krb5_kdcpreauth_callbacks cb,
+                              krb5_kdcpreauth_rock rock,
+                              krb5_kdcpreauth_moddata moddata,
+                              krb5_preauthtype pa_type,
+                              krb5_kdcpreauth_edata_respond_fn respond,
+                              void *arg);
+// krb5_error_code 
+// otp_edata(krb5_context context, krb5_kdc_req *request,
+//           krb5_kdcpreauth_callbacks cb, krb5_kdcpreauth_rock rock,
+//           krb5_kdcpreauth_moddata moddata, krb5_preauthtype pa_type,
+//           krb5_kdcpreauth_edata_respond_fn respond, void *arg);
 /*  Опционально: 
         проверьте данные предварительной аутентификации, отправленные клиентом, установив флажок TKT_FL_PRE_AUTH или TEXT_FLG_HW_AUTH в поле "флаги" enc_tkt_reply, если это необходимо.  
         Реализация должна вызывать функцию response по завершении, независимо от того, успешно это или нет, либо перед возвратом, либо асинхронно, используя контекст verto, возвращаемый cb->event_context().
-*/
-void
+// */
+// krb5_error_code otp_verify(krb5_context context,
+//                                       krb5_data *req_pkt,
+//                                       krb5_kdc_req *request,
+//                                       krb5_enc_tkt_part *enc_tkt_reply,
+//                                       krb5_pa_data *data,
+//                                       void *gak_data);
+void 
 otp_verify(krb5_context context, krb5_data *req_pkt, krb5_kdc_req *request,
            krb5_enc_tkt_part *enc_tkt_reply, krb5_pa_data *pa,
            krb5_kdcpreauth_callbacks cb, krb5_kdcpreauth_rock rock,

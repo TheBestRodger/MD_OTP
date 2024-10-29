@@ -22,14 +22,14 @@ file(GLOB_RECURSE   HEADER     ${INCLUDE_PATH}/*.h)
 
 #add_library(OTP SHARED ${HEADER} ${SOURCE})
 #set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}/lib)
-add_library(OTP SHARED ${HEADER} ${SOURCE} )
+add_library(otp SHARED ${HEADER} ${SOURCE} )
 
-target_link_libraries(OTP /lib/x86_64-linux-gnu/mit-krb5/libkrb5.so)
-target_link_libraries(OTP /lib/x86_64-linux-gnu/libcom_err.so)
+target_link_libraries(otp /lib/x86_64-linux-gnu/mit-krb5/libkrb5.so)
+target_link_libraries(otp /lib/x86_64-linux-gnu/libcom_err.so)
 #target_link_libraries(OTP /home/md_otp/test_plugin/lib/libkrad.so)
 #target_link_libraries(OTP /usr/lib/x86_64-linux-gnu/libattr.a)
 #set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
 
 
 
-set(LIBRARY_OUTPUT_PATH /home/md_otp/test_plugin/lib)#${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
+set(LIBRARY_OUTPUT_PATH /home/md/plugins)#/home/md_otp/test_plugin/lib)#${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
