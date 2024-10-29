@@ -7,7 +7,7 @@ kdcpreauth_libOTP_initvt(krb5_context ctx, int maj_ver, int min_ver,
                       krb5_plugin_vtable vtable);
 /*KRB5_PADATA_OTP_REQUEST KRB5_PADATA_OTP_PIN_CHANGE KRB5_PADATA_OTP_CHALLENGE*/
 static krb5_preauthtype otp_pa_type_list[] =
-  { KRB5_PADATA_OTP_CHALLENGE, 0 };
+  { KRB5_PADATA_OTP_REQUEST, 0 };
 
 
 

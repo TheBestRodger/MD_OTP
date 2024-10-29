@@ -278,6 +278,8 @@ typedef int
  * non-null pa value, pa will be included in the hint list and will later be
  * freed by the KDC.
  */
+/*Ответчик для krb5_kdcpreauth_data_fn.  При вызове с ненулевым кодом pa будет проигнорирован, и тип данных pa не будет включен в список подсказок.При вызове с нулевым кодом и нулевым значением pa тип padata будет
+включен в список с пустым значением.  При вызове с нулевым кодом и ненулевым значением pa, pa будет включен в список подсказок и позже будет освобожден KDC.*/
 typedef void
 (*krb5_kdcpreauth_edata_respond_fn)(void *arg, krb5_error_code code,
                                     krb5_pa_data *pa);

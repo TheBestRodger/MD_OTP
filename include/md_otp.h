@@ -42,6 +42,14 @@ struct krad_packet_st {
     krad_attrset *attrset;
     krb5_data pkt;
 };
+
+typedef enum otp_response {
+    otp_response_fail = 0,
+    otp_response_success
+    /* Other values reserved for responses like next token or new pin. */
+} otp_response;
+
+
 /* 
             General plugin concepts point 2
 
@@ -92,7 +100,9 @@ otp_verify(krb5_context context, krb5_data *req_pkt, krb5_kdc_req *request,
            krb5_kdcpreauth_verify_respond_fn respond, void *arg);
 
 
-
+typedef void
+(*otp_cb)(void *data, krb5_error_code retval, otp_response response,
+          char *const *indicators);
 
 typedef struct token_type_st {
     char *name;
@@ -117,6 +127,7 @@ typedef struct _krb5_algorithm_identifier {
     krb5_data algorithm;      /* OID */
     krb5_data parameters; /* Optional */
 } krb5_algorithm_identifier;
+
 typedef struct _krb5_otp_tokeninfo {
     krb5_flags flags;
     krb5_data vendor;
@@ -136,28 +147,56 @@ typedef struct _krb5_pa_otp_challenge {
     krb5_data salt;
     krb5_data s2kparams;
 } krb5_pa_otp_challenge;
+
+typedef struct _krb5_pa_otp_req {
+    krb5_int32 flags;
+    krb5_data nonce;
+    krb5_enc_data enc_data;
+    krb5_algorithm_identifier *hash_alg;
+    krb5_int32 iteration_count; /* -1 for unspecified */
+    krb5_data otp_value;
+    krb5_data pin;
+    krb5_data challenge;
+    krb5_timestamp time;
+    krb5_data counter;
+    krb5_int32 format;          /* -1 for unspecified */
+    krb5_data token_id;
+    krb5_data alg_id;
+    krb5_data vendor;
+} krb5_pa_otp_req;
+
+typedef struct _krb5_pa_enc_ts {
+    krb5_timestamp      patimestamp;
+    krb5_int32          pausec;
+} krb5_pa_enc_ts;
 /*UTILS*/
 
 krb5_data
 make_data(void *data, unsigned int len);
-
+krb5_data
+empty_data();
 krb5_error_code
 alloc_data(krb5_data *data, unsigned int len);
 void *
 k5calloc(size_t nmemb, size_t size, krb5_error_code *code);
 void *
 k5alloc(size_t size, krb5_error_code *code);
-krb5_error_code
-nonce_generate(krb5_context ctx, unsigned int length, krb5_data *nonce_out);
+// krb5_error_code
+// nonce_generate(krb5_context ctx, unsigned int length, krb5_data *nonce_out);
 // void
 // md_store_32_be (unsigned int val, void *vp);
 
 krb5_error_code
 encode_krb5_pa_otp_challenge(const krb5_pa_otp_challenge *, krb5_data **);
 
-krb5_error_code
-token_types_decode(profile_t profile, token_type **out);
+// krb5_error_code
+// token_types_decode(profile_t profile, token_type **out);
 
+krb5_error_code
+otp_state_new(krb5_context ctx, otp_state **out);
+
+void
+otp_state_free(otp_state *self);
 // krb5_error_code
 // encode_krb5_pa_otp_req(const krb5_pa_otp_req *, krb5_data **);
 
